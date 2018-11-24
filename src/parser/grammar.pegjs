@@ -98,14 +98,14 @@ ZeuxCommand
 	/ $("COLOR"i WB) $("FADE"i WB) $("IN"i WB) 
 	/ $("COLOR"i WB) $("INTENSITY"i WB) NumberValue $("PERCENT"i WB) 
 	/ $("COLOR"i WB) $("INTENSITY"i WB) NumberValue NumberValue $("PERCENT"i WB) 
-	/ $("COPY"i WB) NumberValue NumberValue NumberValue NumberValue
 	/ $("COPY"i WB) DirectionValue DirectionValue
+	/ $("COPY"i WB) NumberValue NumberValue NumberValue NumberValue
 	/ $("COPY"i WB) $("BLOCK"i WB) NumberValue NumberValue NumberValue NumberValue NumberValue NumberValue
 	/ $("COPY"i WB) $("CHAR"i WB) NumberValue NumberValue
 	/ $("COPY"i WB) $("OVERLAY"i WB) $("BLOCK"i WB) NumberValue NumberValue NumberValue NumberValue NumberValue NumberValue
+	/ $("COPYROBOT"i WB) DirectionValue
 	/ $("COPYROBOT"i WB) StringValue
 	/ $("COPYROBOT"i WB) NumberValue NumberValue
-	/ $("COPYROBOT"i WB) DirectionValue
 	/ $("CYCLE"i WB) NumberValue
 	/ $("DIE"i WB) 
 	/ $("DIE"i WB) $("ITEM"i WB) 
@@ -187,10 +187,10 @@ ZeuxCommand
 	/ $("PLAYER"i WB) $("CHAR"i WB) NumberValue
 	/ $("PLAYERCOLOR"i WB) ColorValue
 	/ $("PUSH"i WB) DirectionValue
+	/ $("PUT"i WB) ColorValue ThingValue ParameterValue DirectionValue $("PLAYER"i WB) 
 	/ $("PUT"i WB) ColorValue ThingValue ParameterValue DirectionValue
 	/ $("PUT"i WB) ColorValue ThingValue ParameterValue NumberValue NumberValue
 	/ $("PUT"i WB) ColorValue NumberValue $("OVERLAY"i WB) NumberValue NumberValue
-	/ $("PUT"i WB) ColorValue ThingValue ParameterValue DirectionValue $("PLAYER"i WB) 
 	/ $("PUT"i WB) $("PLAYER"i WB) DirectionValue
 	/ $("PUT"i WB) $("PLAYER"i WB) NumberValue NumberValue
 	/ $("REL"i WB) $("COUNTERS"i WB) 
@@ -222,8 +222,8 @@ ZeuxCommand
 	/ $("SCROLLVIEW"i WB) $("POSITION"i WB) NumberValue NumberValue
 	/ $("SEND"i WB) DirectionValue $("PLAYER"i WB) StringValue
 	/ $("SEND"i WB) NumberValue NumberValue StringValue
+	/ $("SEND"i WB) DirectionValue StringValue
 	/ $("SEND"i WB) StringValue StringValue
-	/ $("SEND"i WB) DirectionValue StringValue // FUCK
 	/ $("SET"i WB) $("COLOR"i WB) NumberValue NumberValue NumberValue NumberValue
 	/ $("SET"i WB) $("EDGE"i WB) $("COLOR"i WB) ColorValue
 	/ $("SET"i WB) $("MAXHEALTH"i WB) NumberValue
@@ -265,7 +265,6 @@ StringValue
 
 NumberValue
 	= value:Expression
-		{ return { type: "NumberValue", location: location(), value } }
 
 ColorValue
 	= value:$("c"i [0-9A-F?]i [0-9A-F?]i) WB
@@ -501,33 +500,6 @@ ReservedWords
 	/ "const"i
 	/ "end"i
 	/ "return"i
-
-	// Direction codes
-	/ "NORTH"i
-	/ "N"i
-	/ "UP"i
-	/ "SOUTH "i
-	/ "S"i
-	/ "DOWN"i
-	/ "EAST"i
-	/ "E"i
-	/ "RIGHT"i
-	/ "WEST"i
-	/ "W"i
-	/ "LEFT"i
-	/ "IDLE"i
-	/ "NODIR"i
-	/ "ANYDIR"i
-	/ "RANDNS"i
-	/ "RANDEW"i
-	/ "RANDNE"i
-	/ "RANDNB"i
-	/ "RANDB"i
-	/ "SEEK"i
-	/ "FLOW"i
-	/ "RANDANY"i
-	/ "UNDER"i
-	/ "BENEATH"i
 
 	// These are the bullshit that megazeux uses
 	/ "SHOOT"i
