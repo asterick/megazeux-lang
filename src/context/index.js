@@ -14,7 +14,8 @@ class Module {
 		this._context = ctx;
 		this._globals = {};
 
-		// TODO: START PROCESSING THE FILE FOR NAMES
+		// TODO: UNROLL STATEMENTS INTO A FLAT FILE
+		console.log(JSON.stringify(this._ast, null, 2));
 	}
 }
 

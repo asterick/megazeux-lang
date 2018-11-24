@@ -34,7 +34,7 @@
 
 Body
 	= _ body:Statement*
-		{ return { type: "ProgramBody", body } }
+		{ return body }
 
 Statement
 	= UsingStatement
@@ -51,6 +51,7 @@ Statement
 	/ ZeuxTerm
 	/ LineBreak
 	/ CommentStatement
+	/ ReturnStatement
 
 CommentStatement
 	= "//" body:$(![\n\r] .)* LineBreak
@@ -65,13 +66,13 @@ UsingStatement
 FunctionStatement
 	= "DEFINE"i WB name:Identifier "(" _ first:(p:Identifier "," _ { return p })* last:Identifier? ")" _
 		body: Statement*
-	  "ENDDEF"i WB
+	  "END"i WB
 		{ return { type: "FunctionStatement", name, parameters:last && first.concat(last), location: location(), body } }
 
 WhileStatement
 	= "WHILE"i WB expression:Expression
 		body:Statement*
-	  "ENDWHILE"i WB 
+	  "END"i WB 
 		{ return { type: "WhileStatement", location: location(), expression, body } }
 
 DoWhileStatement
@@ -85,7 +86,7 @@ IfStatement
 		body:Statement*
  		elseifs:ElseIfStatement*
  		otherwise:ElseStatement?
-	  "ENDIF"i WB 
+	  "END"i WB 
 		{ return { type: "IfStatement", location: location(), expression, body, elseifs, otherwise } }
 
 ElseIfStatement
@@ -99,7 +100,7 @@ ElseStatement
 		{ return { type: "ElseStatement", location: location(), body } }
 
 SwitchStatement
-	= "SWITCH"i WB match:Expression cases:SwitchCaseStatement* "ENDSWITCH"i WB
+	= "SWITCH"i WB match:Expression cases:SwitchCaseStatement* "END"i WB
 		{ return { type: "SwitchStatement", location: location(), match, cases }}
 
 SwitchCaseStatement
@@ -247,14 +248,12 @@ ReservedWords
 	/ "do"i
 	/ "while"i
 	/ "const"i
-
-	/ "endif"i
-	/ "endswitch"i
-	/ "enddef"i
+	/ "end"i
+	/ "return"i
 
 ZeuxTerms
-	= "C"i [0-9?][0-9?]
-	/ "P"i [0-9?][0-9?]
+	= $("C"i [0-9?][0-9?])
+	/ $("P"i [0-9?][0-9?])
 	/ "SHOOT"i
 	/ "ENABLE"i
 	/ "SPITFIRE"i
@@ -318,7 +317,7 @@ ZeuxTerms
 	/ "ROW"i
 	/ "LOAD"i
 	/ "ENEMY"i
-	/ "END"i
+	/ "STOP"i
 	/ "TRY"i
 	/ "GIVEKEY"i
 	/ "INPUT"i

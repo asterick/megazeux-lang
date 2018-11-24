@@ -6,7 +6,16 @@ global commands = 1000000
 
 import "consts"
 
-local x = 0
+define square(x)
+	switch x
+		0: 
+			return 0
+		default:
+			return x ** 2
+	end
+end
+
+local x = square(32)
 
 *("spr" .. x .. "_x") = consts.PLAYER_HEALTH
 
