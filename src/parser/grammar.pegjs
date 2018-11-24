@@ -482,7 +482,7 @@ Number
 
 Identifier
 	= !ReservedWord name:$("$"? [A-Z_]i [A-Z0-9_]i*) _
-		{ return { type: "Identifier", location: location(), name } }
+		{ return { type: "Identifier", location: location(), name: name.toUpperCase() } }
 
 ReservedWord
 	= name:ReservedWords ![A-Z]i

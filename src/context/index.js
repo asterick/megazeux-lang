@@ -5,19 +5,29 @@ const parser = require('../parser');
 const logging = require('../logging');
 const locate = require('../locate');
 
-function defer(cb) {
-	setTimeout(cb, 0);
+class Scope {
+	constructor(globals) {
+		this._globals = globals
+	}
+
+	push() {
+
+	}
+
+	pop() {
+
+	}
 }
 
 class Module {
 	constructor (ctx, fn) {
-		this._defaultName = path.basename(fn).split(".")[0];
+		this._defaultName = path.basename(fn).split(".")[0].toUpperCase();
 
 		this._context = ctx;
-		this._globals = {};
+		this._scope = new Scope();
 
 		const ast = parser.parse(fs.readFileSync(fn, 'utf-8'));
-		this._root = ctx.unpack(ast, this._globals, this._globals, path.dirname(fn));
+		this._root = ctx.unpack(ast, this._scope, path.dirname(fn));
 	}
 }
 
@@ -46,97 +56,105 @@ class Context {
 	}
 
 	// Create global entries
-
-	unpack(body, parent, globals, root, depth = 0) {
-		const defines = Object.create(parent);
+	unpack(body, scope, root) {
 		const localDepth = 0;
 		const terms = [];
+
+		scope.push();
 
 		body.forEach(term => {
 			switch (term.type) {
 			case 'ImportStatement':
 				{
-					if (term.file.type !== 'String') throw Error("Illegal import argument")
-			
 					const i = this.import(term.file.value, root);			
-					const n = term.name ? term.name.name : i._defaultName
+					const name = term.name ? term.name.name : i._defaultName
 		
-					defines[n.toUpperCase()] = i;
+					defines[name] = i;
 				}
 				break ;
+
 			case 'GlobalStatement':
 				{
-					const n = term.name.name;
-					const target = this.global(n);
-					globals[n] = defines[n] = target
+					const name = term.name.name;
+					const target = { type: "Global", name }
+					globals[name] = defines[name] = target
 					
 					terms.push({ 
-						type:"Assignment", 
+						type: "Assignment", 
 						location: term.location,
-						value: this.unpackTerm(term.value),
+						value: unpackExpression(term.value),
 						target
 					});
 				}
 				break ;
+
 			case 'LocalStatement':
 				{
-					const n = term.name.name;
-					const target = { type: "Local", depth: depth++ };
-					defines[n] = target
+					const name = term.name.name;
+					const target = { type: "Local" };
+					defines[name] = target
 					
 					terms.push({ 
-						type:"Assignment", 
+						type: "Assignment", 
 						location: term.location,
-						value: this.unpackTerm(term.value),
+						value: unpackExpression(term.value),
 						target
 					});
 				}
 				break ;
+
 			case 'ConstStatement':
 				{
-					const n = term.name.name;
-					defines[n] = this.constant(n);
+					const name = term.name.name;
+					defines[name] = unpackExpression(term.value);
 				}
 				break ;
+
 			case 'FunctionStatement':
 			case 'AssignmentStatement':
 			case 'ExpressionStatement':
-			case 'ZeuxStatement':
-				//console.log(term);
 				break ;
+			case 'ZeuxStatement':
+				term.body.forEach(term => {
+					if (typeof term === 'string') {
+						terms.push({
+							type: "RawCode",
+							value: term
+						});
 
+						return ;
+					}
+
+					terms.push(term);
+				})
+				break ;
 			case 'Comment':
+				term.body.split(/\r\n?|\n\r?/g).forEach(v => {
+					terms.push({
+						type: "RawCode",
+						value: v
+					});
+				})
+				break ;
 			case 'LineBreak':
-				terms.push(term);
+				terms.push({
+					type: "RawCode",
+					value: "\n"
+				});
 				break ;
 			default:
 				throw new Error(`Unhandled type: ${term.type}`);
 			}
 		});
 
-		return { statements: terms, localDepth: depth };
+		scope.pop();
+
+		return terms;
 	}
 
-	unpackTerm(tree, defines, globals) {
-		console.log(tree);
+	unpackExpression(exp, defines, globals) {
+		//console.log(tree);
 		return tree;
-	}
-
-	global (name) {
-		return { type: "Global", name: "name" }
-	}
-
-	local (name) {
-		return { type: "Global", name: "name" }
-	}
-
-	constant (name) {
-		return { type: "Global", name: "name" }
-	}
-
-	// Helper functions
-	constants(tree) {
-
 	}
 }
 
