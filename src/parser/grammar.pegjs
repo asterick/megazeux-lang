@@ -48,10 +48,11 @@ Statement
 	/ LocalStatement
 	/ ConstStatement
 	/ AssignmentStatement
-	/ Expression
 	/ LineBreak
 	/ CommentStatement
 	/ ReturnStatement
+	/ value:Expression
+		{ return { type: "ExpressionStatement", value } }
 
 CommentStatement
 	= "//" body:$(![\n\r] .)* LineBreak
@@ -267,22 +268,22 @@ NumberValue
 	= value:Expression
 
 ColorValue
-	= value:$("c"i [0-9A-F?]i [0-9A-F?]i) WB
-    	{ return { type: "ZeuxLiteral", location: location(), value } }
+	= value:$("c"i [0-9A-F?]i [0-9A-F?]i WB)
+    	{ return value }
 	/ Expression
 
 ParameterValue
-	= value:$("p"i [0-9A-F?]i [0-9A-F?]i) WB
-    	{ return { type: "ZeuxLiteral", location: location(), value } }
+	= value:$("p"i [0-9A-F?]i [0-9A-F?]i WB)
+    	{ return value }
 	/ Expression
 
 ThingValue
-	= value:$([A-Z]i+) WB
-    	{ return { type: "ZeuxLiteral", location: location(), value } }
+	= value:$([A-Z]i+ WB)
+    	{ return value }
 
 DirectionValue
 	= value:$DirectionWord WB
-    	{ return { type: "ZeuxLiteral", location: location(), value } }
+    	{ return value }
 
 DirectionWord
 	= "NORTH"i
@@ -313,7 +314,7 @@ DirectionWord
 
 UsingStatement
 	= "IMPORT"i WB file:String name:("AS"i WB name:Identifier { return name })?
-		{ return { type: "ImportModule", file, name } }
+		{ return { type: "ImportStatement", file, name } }
 
 FunctionStatement
 	= "DEFINE"i WB name:Identifier "(" _ first:(p:Identifier "," _ { return p })* last:Identifier? ")" _
@@ -334,7 +335,7 @@ DoWhileStatement
 		{ return { type: "DoWhileStatement", location: location(), expression, body } }
 
 IfStatement
-	= "IF"i WB expression:Expression
+	= "IF"i WB expression:Expression "THEN"i WB
 		body:Statement*
  		elseifs:ElseIfStatement*
  		otherwise:ElseStatement?
@@ -363,16 +364,16 @@ SwitchCaseStatement
 	/ LineBreak
 
 GlobalStatement
-	= "GLOBAL"i WB name:Identifier initializer:("=" _ value:Expression { return value })?
-		{ return { type: "GlobalStatement", name, initializer } }
+	= "GLOBAL"i WB name:Identifier value:("=" _ v:Expression { return v })?
+		{ return { type: "GlobalStatement", location: location(), name, value } }
 
 LocalStatement
-	= "LOCAL"i WB name:Identifier initializer:("=" _ value:Expression { return value })?
-		{ return { type: "LocalStatement", name, initializer } }
+	= "LOCAL"i WB name:Identifier value:("=" _ v:Expression { return v })?
+		{ return { type: "LocalStatement", location: location(), name, value } }
 
 ConstStatement
-	= "CONST"i WB name:Identifier initializer:"=" _ value:Expression
-		{ return { type: "LocalStatement", name, initializer } }
+	= "CONST"i WB name:Identifier "=" _ value:Expression
+		{ return { type: "ConstStatement", const: location(), name, value } }
 
 AssignmentStatement
 	= target:UnaryExpression op:("+"/"-"/"**"/"*"/"/"/"%"/"&"/"|"/"^"/">>>"/">>"/"<<") "=" _ right:Expression
@@ -494,6 +495,7 @@ ReservedWords
 	/ "default"i
 	/ "switch"i
 	/ "if"i
+	/ "then"i
 	/ "else"i
 	/ "do"i
 	/ "while"i
