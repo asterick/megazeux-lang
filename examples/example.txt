@@ -19,4 +19,4 @@ local x = square(32)
 
 *("spr" .. x .. "_x") = consts.PLAYER_HEALTH
 
-put c0F CustomBlock p?? at 100 200
+put c0F CustomBlock p?? 100 200

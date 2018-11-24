@@ -261,29 +261,29 @@ ZeuxCommand
 
 StringValue
 	= value:Expression
-		{ return { type: "StringValue", location: location(), expression } }
+		{ return { type: "StringValue", location: location(), value } }
 
 NumberValue
 	= value:Expression
-		{ return { type: "NumberValue", location: location(), expression } }
+		{ return { type: "NumberValue", location: location(), value } }
 
 ColorValue
 	= value:$("c"i [0-9A-F?]i [0-9A-F?]i) WB
-    	{ return { type: "ZeuxLiteral", location: location(), value} }
+    	{ return { type: "ZeuxLiteral", location: location(), value } }
 	/ Expression
 
 ParameterValue
 	= value:$("p"i [0-9A-F?]i [0-9A-F?]i) WB
-    	{ return { type: "ZeuxLiteral", location: location(), value} }
+    	{ return { type: "ZeuxLiteral", location: location(), value } }
 	/ Expression
 
 ThingValue
 	= value:$([A-Z]i+) WB
-    	{ return { type: "ZeuxLiteral", location: location(), value} }
+    	{ return { type: "ZeuxLiteral", location: location(), value } }
 
 DirectionValue
 	= value:$DirectionWord WB
-    	{ return { type: "ZeuxLiteral", location: location(), value} }
+    	{ return { type: "ZeuxLiteral", location: location(), value } }
 
 DirectionWord
 	= "NORTH"i
