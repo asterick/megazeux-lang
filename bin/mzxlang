@@ -1,0 +1,55 @@
+#!/usr/bin/env node
+'use strict';
+
+const path = require("path");
+const { version } = require(path.join(__dirname, "../package.json"));
+const { ArgumentParser } = require("argparse");
+
+const Compiler = require(path.resolve(__dirname, "../src"));
+
+const parser = new ArgumentParser({
+	description: 'Megazeux HLL',
+	addHelp: true,
+	version
+});
+
+parser.addArgument(
+	'files',
+	{
+		help: "source files",
+		nargs: "+"
+	}
+);
+
+parser.addArgument(
+	['-l', '--logging'],
+	{
+		nargs: 1,
+		help: "logging level",
+		defaultValue: 'info'
+	}
+)
+
+parser.addArgument(
+	['-w', '--watch'],
+	{
+		help: "rebuild source on file change"
+	}
+);
+
+parser.addArgument(
+	['-o', '--target'],
+	{
+		help: "destination filename"
+	}
+);
+
+const args = parser.parseArgs();
+
+// Temporary code
+try {
+	const program = tiko.compile(args.files);
+} catch(e) {
+	tiko.logging.log('error', e.message);
+}
+
