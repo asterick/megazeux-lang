@@ -38,6 +38,8 @@ Body
 Statement
 	= UsingStatement
 	/ FunctionStatement
+	/ WhileStatement
+	/ DoWhileStatement
 	/ IfStatement
 	/ SwitchStatement
 	/ GlobalStatement
@@ -58,8 +60,20 @@ FunctionStatement
 	  "ENDDEF"i WB
 		{ return { type: "FunctionStatement", name, parameters:last && first.concat(last), location: location(), body } }
 
+WhileStatement
+	= "WHILE"i WB expression:Expression
+		body:Statement*
+	  "ENDWHILE"i WB 
+		{ return { type: "WhileStatement", location: location(), expression, body } }
+
+DoWhileStatement
+	= "DO"i WB
+		body:Statement*
+	  "WHILE"i WB expression:Expression
+		{ return { type: "DoWhileStatement", location: location(), expression, body } }
+
 IfStatement
-	= "IF"i WB expression:Expression "THEN"i WB 
+	= "IF"i WB expression:Expression
 		body:Statement*
  		elseifs:ElseIfStatement*
  		otherwise:ElseStatement?
@@ -96,7 +110,7 @@ LocalStatement
 		{ return { type: "LocalStatement", name, initializer } }
 
 AssignmentStatement
-	= target:Variable op:("+"/"-"/"*"/"/"/"%"/"&"/"|"/"^") "=" _ right:Expression
+	= target:UnaryExpression op:("+"/"-"/"*"/"/"/"%"/"&"/"|"/"^") "=" _ right:Expression
 		{ 
 			return { 
 				type:"Assignment", 
@@ -111,7 +125,7 @@ AssignmentStatement
 				target
 			}
 		}
-	/ target:Variable "=" _ value:Expression
+	/ target:UnaryExpression "=" _ value:Expression
 		{ return { type:"AssignmentStatement", location: location(), target, value } }
 
 ReturnStatement
@@ -217,8 +231,10 @@ ReservedWords
 	/ "default"i
 	/ "switch"i
 	/ "if"i
-	/ "then"i
 	/ "else"i
+	/ "do"i
+	/ "while"i
+
 	/ "endif"i
 	/ "endswitch"i
 	/ "enddef"i

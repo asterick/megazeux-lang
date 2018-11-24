@@ -1,44 +1,8 @@
 const path = require('path');
-const fs = require('fs');
 const { Gaze } = require('gaze');
 
-const parser = require('./parser');
 const logging = require('./logging');
-const locate = require('./locate');
-
-class Module {
-	constructor (fn) {
-		this._path = fn;
-		this._defaultName = path.basename(fn).split(".")[0];
-
-		this._ast = parser.parse(fs.readFileSync(fn, 'utf-8'));
-		this._imports = {};
-
-		console.log(this._defaultName);
-	}
-}
-
-class Context {
-	constructor() {
-		this._modules = {};
-		this.files = [];
-	}
-
-	import(fn, root) {
-		const target = locate(fn, root);
-
-		if (this._modules[target]) return this._modules[target];
-
-		logging.info(`Importing: ${fn} (${target})`)
-
-		this.files.push(target);
-		this._modules[target] = new Module(target);
-	}
-
-	export(fn) {
-		// TODO: WRITE OUT TO FILE HERE
-	}
-}
+const Context = require('./context');
 
 function compile(target, files) {
 	const context = new Context();
