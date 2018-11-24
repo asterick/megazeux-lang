@@ -2,6 +2,12 @@
 This is my local commment
 */
 
+global commands = 1000000
+
+import "consts"
+
 local x = 0
 
-*("spr" .. x .. "_x") = 9
+*("spr" .. x .. "_x") = consts.PLAYER_HEALTH
+
+put c0F CustomBlock p?? at 100 200

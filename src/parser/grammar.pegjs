@@ -44,17 +44,17 @@ Statement
 	/ SwitchStatement
 	/ GlobalStatement
 	/ LocalStatement
+	/ ConstStatement
 	/ AssignmentStatement
-	/ ReturnStatement
+	/ Expression
 	/ ZeuxTerm
-	/ Variable // For function calls
 	/ LineBreak
 	/ CommentStatement
 
 CommentStatement
-	= "//" body:(![\n\r] .)* LineBreak
+	= "//" body:$(![\n\r] .)* LineBreak
 		{ return { type: "Comment", location: location(), body } }
-	/ "/*" body:(!"*/" .)* "*/"
+	/ "/*" body:$(!"*/" .)* "*/"
 		{ return { type: "Comment", location: location(), body } }
 
 UsingStatement
@@ -114,6 +114,10 @@ GlobalStatement
 
 LocalStatement
 	= "LOCAL"i WB name:Identifier initializer:("=" _ value:Expression { return value })?
+		{ return { type: "LocalStatement", name, initializer } }
+
+ConstStatement
+	= "CONST"i WB name:Identifier initializer:"=" _ value:Expression
 		{ return { type: "LocalStatement", name, initializer } }
 
 AssignmentStatement
@@ -241,6 +245,7 @@ ReservedWords
 	/ "else"i
 	/ "do"i
 	/ "while"i
+	/ "const"i
 
 	/ "endif"i
 	/ "endswitch"i

@@ -1,0 +1,1 @@
+const PLAYER_HEALTH = 1000000

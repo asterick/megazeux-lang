@@ -14,7 +14,7 @@ class Module {
 		this._context = ctx;
 		this._globals = {};
 
-		console.log(this._ast)
+		// TODO: START PROCESSING THE FILE FOR NAMES
 	}
 }
 
@@ -33,6 +33,8 @@ class Context {
 
 		this.files.push(target);
 		this._modules[target] = new Module(this, target);
+
+		return this._modules[target];
 	}
 
 	export(fn) {
