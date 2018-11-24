@@ -37,7 +37,8 @@ Body
 		{ return body }
 
 Statement
-	= UsingStatement
+	= ZeuxStatement
+	/ UsingStatement
 	/ FunctionStatement
 	/ WhileStatement
 	/ DoWhileStatement
@@ -48,7 +49,6 @@ Statement
 	/ ConstStatement
 	/ AssignmentStatement
 	/ Expression
-	/ ZeuxTerm
 	/ LineBreak
 	/ CommentStatement
 	/ ReturnStatement
@@ -58,6 +58,259 @@ CommentStatement
 		{ return { type: "Comment", location: location(), body } }
 	/ "/*" body:$(!"*/" .)* "*/"
 		{ return { type: "Comment", location: location(), body } }
+
+
+ZeuxStatement
+	= body:ZeuxCommand LineBreak
+		{ return { type:"ZeuxStatement", location: location(), body } }
+
+ZeuxCommand
+	= $("ABORT"i WB) $("LOOP"i WB) 
+	/ $("ASK"i WB) StringValue
+	/ $("AVALANCHE"i WB) 
+	/ $("BECOME"i WB) ColorValue ThingValue ParameterValue
+	/ $("BECOME"i WB) $("NONLAVAWALKER"i WB) 
+	/ $("BECOME"i WB) $("NONPUSHABLE"i WB) 
+	/ $("BECOME"i WB) $("LAVAWALKER"i WB) 
+	/ $("BECOME"i WB) $("PUSHABLE"i WB) 
+	/ $("BLIND"i WB) NumberValue
+	/ $("BOARD"i WB) DirectionValue StringValue
+	/ $("BOARD"i WB) DirectionValue $("NONE"i WB) 
+	/ $("BULLETCOLOR"i WB) ColorValue
+	/ $("BULLETE"i WB) NumberValue
+	/ $("BULLETN"i WB) NumberValue
+	/ $("BULLETS"i WB) NumberValue
+	/ $("BULLETW"i WB) NumberValue
+	/ $("CENTER"i WB) $("MESG"i WB) 
+	/ $("CHANGE"i WB) ColorValue ThingValue ParameterValue ColorValue ThingValue ParameterValue
+	/ $("CHANGE"i WB) $("CHAR"i WB) $("ID"i WB) NumberValue NumberValue
+	/ $("CHANGE"i WB) $("OVERLAY"i WB) ColorValue NumberValue ColorValue NumberValue
+	/ $("CHANGE"i WB) $("OVERLAY"i WB) ColorValue ColorValue
+	/ $("CHANGE"i WB) $("SFX"i WB) NumberValue StringValue
+	/ $("CHANGE"i WB) $("THICK"i WB) $("ARROW"i WB) $("CHAR"i WB) DirectionValue NumberValue
+	/ $("CHANGE"i WB) $("THIN"i WB) $("ARROW"i WB) $("CHAR"i WB) DirectionValue NumberValue
+	/ $("CHAR"i WB) NumberValue
+	/ $("CHAR"i WB) $("EDIT"i WB) NumberValue NumberValue NumberValue NumberValue NumberValue NumberValue NumberValue NumberValue NumberValue NumberValue NumberValue NumberValue NumberValue NumberValue NumberValue
+	/ $("CLEAR"i WB) $("MESG"i WB) 
+	/ $("CLIP"i WB) $("INPUT"i WB) 
+	/ $("COLOR"i WB) ColorValue
+	/ $("COLOR"i WB) $("FADE"i WB) $("OUT"i WB) 
+	/ $("COLOR"i WB) $("FADE"i WB) $("IN"i WB) 
+	/ $("COLOR"i WB) $("INTENSITY"i WB) NumberValue $("PERCENT"i WB) 
+	/ $("COLOR"i WB) $("INTENSITY"i WB) NumberValue NumberValue $("PERCENT"i WB) 
+	/ $("COPY"i WB) NumberValue NumberValue NumberValue NumberValue
+	/ $("COPY"i WB) DirectionValue DirectionValue
+	/ $("COPY"i WB) $("BLOCK"i WB) NumberValue NumberValue NumberValue NumberValue NumberValue NumberValue
+	/ $("COPY"i WB) $("CHAR"i WB) NumberValue NumberValue
+	/ $("COPY"i WB) $("OVERLAY"i WB) $("BLOCK"i WB) NumberValue NumberValue NumberValue NumberValue NumberValue NumberValue
+	/ $("COPYROBOT"i WB) StringValue
+	/ $("COPYROBOT"i WB) NumberValue NumberValue
+	/ $("COPYROBOT"i WB) DirectionValue
+	/ $("CYCLE"i WB) NumberValue
+	/ $("DIE"i WB) 
+	/ $("DIE"i WB) $("ITEM"i WB) 
+	/ $("DISABLE"i WB) $("MESG"i WB) $("EDGE"i WB) 
+	/ $("DISABLE"i WB) $("SAVING"i WB) 
+	/ $("DUPLICATE"i WB) $("SELF"i WB) NumberValue NumberValue
+	/ $("DUPLICATE"i WB) $("SELF"i WB) DirectionValue
+	/ $("STOP"i WB) 
+	/ $("STOP"i WB) $("MOD"i WB) 
+	/ $("STOP"i WB) $("PLAY"i WB) 
+	/ $("STOP"i WB) $("SAM"i WB) 
+	/ $("ENDGAME"i WB) 
+	/ $("ENDLIFE"i WB) 
+	/ $("ENABLE"i WB) $("MESG"i WB) $("EDGE"i WB) 
+	/ $("ENABLE"i WB) $("SAVING"i WB) 
+	/ $("ENABLE"i WB) $("SENSORONLY"i WB) $("SAVING"i WB) 
+	/ $("ENEMY"i WB) $("BULLETCOLOR"i WB) ColorValue
+	/ $("ENEMY"i WB) $("BULLETE"i WB) NumberValue
+	/ $("ENEMY"i WB) $("BULLETN"i WB) NumberValue
+	/ $("ENEMY"i WB) $("BULLETS"i WB) NumberValue
+	/ $("ENEMY"i WB) $("BULLETW"i WB) NumberValue
+	/ $("EXCHANGE"i WB) $("PLAYER"i WB) $("POSITION"i WB) 
+	/ $("EXCHANGE"i WB) $("PLAYER"i WB) $("POSITION"i WB) NumberValue
+	/ $("EXCHANGE"i WB) $("PLAYER"i WB) $("POSITION"i WB) NumberValue $("DUPLICATE"i WB) $("SELF"i WB) 
+	/ $("EXPLODE"i WB) NumberValue
+	/ $("FIREWALKER"i WB) NumberValue
+	/ $("FILLHEALTH"i WB) 
+	/ $("FLIP"i WB) $("CHAR"i WB) NumberValue DirectionValue
+	/ $("FREEZETIME"i WB) NumberValue
+	/ $("GIVE"i WB) NumberValue ThingValue
+	/ $("GIVEKEY"i WB) ColorValue
+	/ $("GIVEKEY"i WB) ColorValue StringValue
+	/ $("GO"i WB) DirectionValue NumberValue
+	/ $("GOTO"i WB) StringValue
+	/ $("GOTOXY"i WB) NumberValue NumberValue
+	/ $("INPUT"i WB) $("STRING"i WB) StringValue
+	/ $("JUMP"i WB) $("MOD"i WB) $("ORDER"i WB) NumberValue
+	/ $("LAYBOMB"i WB) DirectionValue
+	/ $("LAYBOMB"i WB) $("HIGH"i WB) DirectionValue
+	/ $("LAZERWALL"i WB) DirectionValue NumberValue
+	/ $("LOAD"i WB) $("CHAR"i WB) $("SET"i WB) StringValue
+	/ $("LOAD"i WB) $("PALETTE"i WB) StringValue
+	/ $("LOCKPLAYER"i WB) 
+	/ $("LOCKPLAYER"i WB) $("ATTACK"i WB) 
+	/ $("LOCKPLAYER"i WB) $("EW"i WB) 
+	/ $("LOCKPLAYER"i WB) $("NS"i WB) 
+	/ $("LOCKSCROLL"i WB) 
+	/ $("LOCKSELF"i WB) 
+	/ $("LOOP"i WB) NumberValue
+	/ $("LOOP"i WB) $("START"i WB) 
+	/ $("MESSAGE"i WB) $("ROW"i WB) NumberValue
+	/ $("MISSILECOLOR"i WB) ColorValue
+	/ $("MOD"i WB) StringValue
+	/ $("MOD"i WB) $("FADE"i WB) NumberValue NumberValue
+	/ $("MOD"i WB) $("FADE"i WB) $("IN"i WB) StringValue
+	/ $("MOD"i WB) $("FADE"i WB) $("OUT"i WB) 
+	/ $("MOD"i WB) $("SAM"i WB) NumberValue NumberValue
+	/ $("MOVE"i WB) $("ALL"i WB) ColorValue ThingValue ParameterValue DirectionValue
+	/ $("MOVE"i WB) $("PLAYER"i WB) DirectionValue
+	/ $("MOVE"i WB) $("PLAYER"i WB) DirectionValue StringValue
+	/ $("NEUTRAL"i WB) $("BULLETCOLOR"i WB) ColorValue
+	/ $("NEUTRAL"i WB) $("BULLETE"i WB) NumberValue
+	/ $("NEUTRAL"i WB) $("BULLETN"i WB) NumberValue
+	/ $("NEUTRAL"i WB) $("BULLETS"i WB) NumberValue
+	/ $("NEUTRAL"i WB) $("BULLETW"i WB) NumberValue
+	/ $("OPEN"i WB) DirectionValue
+	/ $("OVERLAY"i WB) $("ON"i WB) 
+	/ $("OVERLAY"i WB) $("STATIC"i WB) 
+	/ $("OVERLAY"i WB) $("TRANSPARENT"i WB) 
+	/ $("PERSISTENT"i WB) $("GO"i WB) StringValue
+	/ $("PLAY"i WB) StringValue
+	/ $("PLAY"i WB) $("SFX"i WB) StringValue
+	/ $("PLAYER"i WB) $("BULLETCOLOR"i WB) ColorValue
+	/ $("PLAYER"i WB) $("BULLETE"i WB) NumberValue
+	/ $("PLAYER"i WB) $("BULLETN"i WB) NumberValue
+	/ $("PLAYER"i WB) $("BULLETS"i WB) NumberValue
+	/ $("PLAYER"i WB) $("BULLETW"i WB) NumberValue
+	/ $("PLAYER"i WB) $("CHAR"i WB) DirectionValue NumberValue
+	/ $("PLAYER"i WB) $("CHAR"i WB) NumberValue
+	/ $("PLAYERCOLOR"i WB) ColorValue
+	/ $("PUSH"i WB) DirectionValue
+	/ $("PUT"i WB) ColorValue ThingValue ParameterValue DirectionValue
+	/ $("PUT"i WB) ColorValue ThingValue ParameterValue NumberValue NumberValue
+	/ $("PUT"i WB) ColorValue NumberValue $("OVERLAY"i WB) NumberValue NumberValue
+	/ $("PUT"i WB) ColorValue ThingValue ParameterValue DirectionValue $("PLAYER"i WB) 
+	/ $("PUT"i WB) $("PLAYER"i WB) DirectionValue
+	/ $("PUT"i WB) $("PLAYER"i WB) NumberValue NumberValue
+	/ $("REL"i WB) $("COUNTERS"i WB) 
+	/ $("REL"i WB) $("PLAYER"i WB) 
+	/ $("REL"i WB) $("SELF"i WB) 
+	/ $("REL"i WB) $("COUNTERS"i WB) $("FIRST"i WB) 
+	/ $("REL"i WB) $("PLAYER"i WB) $("FIRST"i WB) 
+	/ $("REL"i WB) $("SELF"i WB) $("FIRST"i WB) 
+	/ $("REL"i WB) $("COUNTERS"i WB) $("LAST"i WB) 
+	/ $("REL"i WB) $("PLAYER"i WB) $("LAST"i WB) 
+	/ $("REL"i WB) $("SELF"i WB) $("LAST"i WB) 
+	/ $("RESETVIEW"i WB) 
+	/ $("RESTORE"i WB) StringValue NumberValue
+	/ $("RESTORE"i WB) $("PLAYER"i WB) $("POSITION"i WB) 
+	/ $("RESTORE"i WB) $("PLAYER"i WB) $("POSITION"i WB) NumberValue
+	/ $("RESTORE"i WB) $("PLAYER"i WB) $("POSITION"i WB) NumberValue $("DUPLICATE"i WB) $("SELF"i WB) 
+	/ $("ROTATECW"i WB) 
+	/ $("ROTATECCW"i WB) 
+	/ $("SAM"i WB) NumberValue StringValue
+	/ $("SAVE"i WB) $("PLAYER"i WB) $("POSITION"i WB) 
+	/ $("SAVE"i WB) $("PLAYER"i WB) $("POSITION"i WB) NumberValue
+	/ $("SCROLL"i WB) $("CHAR"i WB) NumberValue DirectionValue
+	/ $("SCROLLARROW"i WB) $("COLOR"i WB) ColorValue
+	/ $("SCROLLBASE"i WB) $("COLOR"i WB) ColorValue
+	/ $("SCROLLCORNER"i WB) $("COLOR"i WB) ColorValue
+	/ $("SCROLLPOINTER"i WB) $("COLOR"i WB) ColorValue
+	/ $("SCROLLTITLE"i WB) $("COLOR"i WB) ColorValue
+	/ $("SCROLLVIEW"i WB) DirectionValue NumberValue
+	/ $("SCROLLVIEW"i WB) $("POSITION"i WB) NumberValue NumberValue
+	/ $("SEND"i WB) DirectionValue $("PLAYER"i WB) StringValue
+	/ $("SEND"i WB) NumberValue NumberValue StringValue
+	/ $("SEND"i WB) StringValue StringValue
+	/ $("SEND"i WB) DirectionValue StringValue // FUCK
+	/ $("SET"i WB) $("COLOR"i WB) NumberValue NumberValue NumberValue NumberValue
+	/ $("SET"i WB) $("EDGE"i WB) $("COLOR"i WB) ColorValue
+	/ $("SET"i WB) $("MAXHEALTH"i WB) NumberValue
+	/ $("SET"i WB) $("MESG"i WB) $("COLUMN"i WB) NumberValue
+	/ $("SFX"i WB) NumberValue
+	/ $("SHOOT"i WB) DirectionValue
+	/ $("SHOOTMISSILE"i WB) DirectionValue
+	/ $("SHOOTSEEKER"i WB) DirectionValue
+	/ $("SLOWTIME"i WB) NumberValue
+	/ $("SPITFIRE"i WB) DirectionValue
+	/ $("STATUS"i WB) $("COUNTER"i WB) NumberValue StringValue
+	/ $("SWAP"i WB) $("WORLD"i WB) StringValue
+	/ $("SWITCH"i WB) DirectionValue DirectionValue
+	/ $("TAKE"i WB) NumberValue ThingValue StringValue
+	/ $("TAKE"i WB) NumberValue ThingValue
+	/ $("TAKEKEY"i WB) ColorValue StringValue
+	/ $("TAKEKEY"i WB) ColorValue
+	/ $("TELEPORT"i WB) $("PLAYER"i WB) StringValue NumberValue NumberValue
+	/ $("TRADE"i WB) NumberValue ThingValue NumberValue ThingValue StringValue
+	/ $("TRY"i WB) DirectionValue StringValue
+	/ $("UNLOCKPLAYER"i WB) 
+	/ $("UNLOCKSCROLL"i WB) 
+	/ $("UNLOCKSELF"i WB) 
+	/ $("VIEWPORT"i WB) $("SIZE"i WB) NumberValue NumberValue
+	/ $("VIEWPORT"i WB) NumberValue NumberValue
+	/ $("VOLUME"i WB) NumberValue
+	/ $("WAIT"i WB) $("MOD"i WB) $("FADE"i WB) 
+	/ $("WAIT"i WB) $("PLAY"i WB) 
+	/ $("WAIT"i WB) $("PLAY"i WB) StringValue
+	/ $("WAIT"i WB) NumberValue
+	/ $("WALK"i WB) DirectionValue
+	/ $("WIND"i WB) NumberValue
+	/ $("WRITE"i WB) $("OVERLAY"i WB) ColorValue StringValue NumberValue NumberValue
+	/ $("ZAP"i WB) StringValue NumberValue
+
+StringValue
+	= value:Expression
+		{ return { type: "StringValue", location: location(), expression } }
+
+NumberValue
+	= value:Expression
+		{ return { type: "NumberValue", location: location(), expression } }
+
+ColorValue
+	= value:$("c"i [0-9A-F?]i [0-9A-F?]i) WB
+    	{ return { type: "ZeuxLiteral", location: location(), value} }
+	/ Expression
+
+ParameterValue
+	= value:$("p"i [0-9A-F?]i [0-9A-F?]i) WB
+    	{ return { type: "ZeuxLiteral", location: location(), value} }
+	/ Expression
+
+ThingValue
+	= value:$([A-Z]i+) WB
+    	{ return { type: "ZeuxLiteral", location: location(), value} }
+
+DirectionValue
+	= value:$DirectionWord WB
+    	{ return { type: "ZeuxLiteral", location: location(), value} }
+
+DirectionWord
+	= "NORTH"i
+	/ "N"i
+	/ "UP"i
+	/ "SOUTH "i
+	/ "S"i
+	/ "DOWN"i
+	/ "EAST"i
+	/ "E"i
+	/ "RIGHT"i
+	/ "WEST"i
+	/ "W"i
+	/ "LEFT"i
+	/ "IDLE"i
+	/ "NODIR"i
+	/ "ANYDIR"i
+	/ "RANDNS"i
+	/ "RANDEW"i
+	/ "RANDNE"i
+	/ "RANDNB"i
+	/ "RANDB"i
+	/ "SEEK"i
+	/ "FLOW"i
+	/ "RANDANY"i
+	/ "UNDER"i
+	/ "BENEATH"i
 
 UsingStatement
 	= "IMPORT"i WB file:String name:("AS"i WB name:Identifier { return name })?
@@ -222,19 +475,17 @@ Number
 		{ return { type: "Number", value: parseInt(value, 16), location: location() } }
 	/ "0b"i value:$([01]+) _
 		{ return { type: "Number", value: parseInt(value, 2), location: location() } }
+	/ "'" char:. "'"
+		{ return { type: "Number", value: char.charCodeAt(0), location: location() } }
 	/ value:$[0-9]+ _
 		{ return { type: "Number", value: parseInt(value, 10), location: location() } }
 
 Identifier
-	= !ZeuxTerm !ReservedWord name:$("$"? [A-Z_]i [A-Z0-9_]i*) _
+	= !ReservedWord name:$("$"? [A-Z_]i [A-Z0-9_]i*) _
 		{ return { type: "Identifier", location: location(), name } }
 
 ReservedWord
 	= name:ReservedWords ![A-Z]i
-
-ZeuxTerm
-	= name:ZeuxTerms ![A-Z]i _
-		{ return { type: "ZeuxTerm", location: location(), name } }
 
 ReservedWords
 	= "using"i
@@ -251,9 +502,34 @@ ReservedWords
 	/ "end"i
 	/ "return"i
 
-ZeuxTerms
-	= $("C"i [0-9?][0-9?])
-	/ $("P"i [0-9?][0-9?])
+	// Direction codes
+	/ "NORTH"i
+	/ "N"i
+	/ "UP"i
+	/ "SOUTH "i
+	/ "S"i
+	/ "DOWN"i
+	/ "EAST"i
+	/ "E"i
+	/ "RIGHT"i
+	/ "WEST"i
+	/ "W"i
+	/ "LEFT"i
+	/ "IDLE"i
+	/ "NODIR"i
+	/ "ANYDIR"i
+	/ "RANDNS"i
+	/ "RANDEW"i
+	/ "RANDNE"i
+	/ "RANDNB"i
+	/ "RANDB"i
+	/ "SEEK"i
+	/ "FLOW"i
+	/ "RANDANY"i
+	/ "UNDER"i
+	/ "BENEATH"i
+
+	// These are the bullshit that megazeux uses
 	/ "SHOOT"i
 	/ "ENABLE"i
 	/ "SPITFIRE"i
@@ -262,7 +538,6 @@ ZeuxTerms
 	/ "DUPLICATE"i
 	/ "ORDER"i
 	/ "LAVAWALKER"i
-	/ "SLOWTIME"i
 	/ "LAST"i
 	/ "SAM"i
 	/ "FIREWALKER"i
@@ -273,7 +548,7 @@ ZeuxTerms
 	/ "GOTO"i
 	/ "RESTORE"i
 	/ "CLEAR"i
-	/ "RANDOM"i
+	/ "ROTATECCW"i
 	/ "ALL"i
 	/ "SCROLLVIEW"i
 	/ "EXPLODE"i
@@ -285,7 +560,6 @@ ZeuxTerms
 	/ "ON"i
 	/ "SFX"i
 	/ "EDIT"i
-	/ "DOUBLE"i
 	/ "SEND"i
 	/ "WRITE"i
 	/ "ITEM"i
@@ -303,7 +577,7 @@ ZeuxTerms
 	/ "STATIC"i
 	/ "BOARD"i
 	/ "BLOCK"i
-	/ "STRING"i
+	/ "LAYBOMB"i
 	/ "BLIND"i
 	/ "NONE"i
 	/ "CENTER"i
@@ -317,7 +591,6 @@ ZeuxTerms
 	/ "ROW"i
 	/ "LOAD"i
 	/ "ENEMY"i
-	/ "STOP"i
 	/ "TRY"i
 	/ "GIVEKEY"i
 	/ "INPUT"i
@@ -326,24 +599,20 @@ ZeuxTerms
 	/ "SIZE"i
 	/ "TELEPORT"i
 	/ "START"i
-	/ "MATCHES"i
-	/ "LAYBOMB"i
 	/ "SCROLLTITLE"i
 	/ "ZAP"i
-	/ "NOT"i
-	/ "ANY"i
 	/ "WIND"i
+	/ "MOD"i
 	/ "ENDLIFE"i
 	/ "CLIP"i
 	/ "GIVE"i
-	/ "HALF"i
+	/ "SLOWTIME"i
+	/ "STOP"i
 	/ "CHAR"i
 	/ "REL"i
 	/ "RESETVIEW"i
 	/ "OPEN"i
 	/ "SET"i
-	/ "SPRITE_COLLIDING"i
-	/ "NO"i
 	/ "COLUMN"i
 	/ "TRADE"i
 	/ "SWITCH"i
@@ -360,14 +629,12 @@ ZeuxTerms
 	/ "PERCENT"i
 	/ "JUMP"i
 	/ "PUSH"i
-	/ "IMAGE_FILE"i
 	/ "LOCKSELF"i
 	/ "PUSHABLE"i
 	/ "THICK"i
 	/ "WAIT"i
 	/ "BULLETE"i
 	/ "SHOOTSEEKER"i
-	/ "ALIGNEDROBOT"i
 	/ "BULLETN"i
 	/ "UNLOCKSCROLL"i
 	/ "PERSISTENT"i
@@ -393,8 +660,7 @@ ZeuxTerms
 	/ "CYCLE"i
 	/ "STATUS"i
 	/ "PLAY"i
-	/ "ROTATECCW"i
-	/ "SPRITE"i
+	/ "STRING"i
 	/ "BULLETCOLOR"i
 	/ "PLAYER"i
 	/ "IN"i
@@ -407,7 +673,6 @@ ZeuxTerms
 	/ "TAKE"i
 	/ "LOCKSCROLL"i
 	/ "MESSAGE"i
-	/ "MOD"i
 	/ "SCROLL"i
 	/ "COUNTERS"i
 
