@@ -18,7 +18,8 @@
 		"-": "Subtraction",
 		"*": "Multiplication",
 		"/": "Division",
-		"%": "Modulo"
+		"%": "Modulo",
+		"..": "Concat"
 	}
 
 	function associate(term, left, right) {
@@ -121,7 +122,7 @@ ConstStatement
 		{ return { type: "LocalStatement", name, initializer } }
 
 AssignmentStatement
-	= target:UnaryExpression op:("+"/"-"/"*"/"/"/"%"/"&"/"|"/"^") "=" _ right:Expression
+	= target:UnaryExpression op:("+"/"-"/"**"/"*"/"/"/"%"/"&"/"|"/"^"/">>>"/">>"/"<<") "=" _ right:Expression
 		{ 
 			return { 
 				type:"Assignment", 
