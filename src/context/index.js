@@ -7,7 +7,24 @@ const locate = require('../locate');
 
 class Scope {
 	constructor(globals) {
-		this._globals = globals
+		this._globals = globals || {};
+		this._locals = Object.create(this._globals);
+
+		this._maxStrings = 0;
+		this._maxNumber = 0;
+		this._scopeStack = [];
+	}
+
+	global(name) {
+
+	}
+
+	local(name) {
+		console.log(name)
+	}
+
+	constant(name, value) {
+
 	}
 
 	push() {
@@ -69,21 +86,19 @@ class Context {
 					const i = this.import(term.file.value, root);			
 					const name = term.name ? term.name.name : i._defaultName
 		
-					defines[name] = i;
+					scope.constant(name, i);
 				}
 				break ;
 
 			case 'GlobalStatement':
 				{
 					const name = term.name.name;
-					const target = { type: "Global", name }
-					globals[name] = defines[name] = target
 					
 					terms.push({ 
 						type: "Assignment", 
 						location: term.location,
-						value: unpackExpression(term.value),
-						target
+						value: this.unpackExpression(term.value, scope),
+						target: scope.global(name)
 					});
 				}
 				break ;
@@ -91,14 +106,12 @@ class Context {
 			case 'LocalStatement':
 				{
 					const name = term.name.name;
-					const target = { type: "Local" };
-					defines[name] = target
-					
+
 					terms.push({ 
 						type: "Assignment", 
 						location: term.location,
-						value: unpackExpression(term.value),
-						target
+						value: this.unpackExpression(term.value, scope),
+						target: scope.local(name)
 					});
 				}
 				break ;
@@ -106,7 +119,7 @@ class Context {
 			case 'ConstStatement':
 				{
 					const name = term.name.name;
-					defines[name] = unpackExpression(term.value);
+					scope.constant(this.unpackExpression(term.value, scope));
 				}
 				break ;
 
@@ -152,9 +165,8 @@ class Context {
 		return terms;
 	}
 
-	unpackExpression(exp, defines, globals) {
-		//console.log(tree);
-		return tree;
+	unpackExpression(exp, scope) {
+		return exp;
 	}
 }
 
