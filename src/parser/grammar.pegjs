@@ -1,3 +1,29 @@
+{
+	const OPERATORS = {
+		"..": "Concatinate",
+		"&": "BitwiseAnd",
+		"|": "BitwiseOr",
+		"^": "ExclusiveOr",
+		"=": "Equal",
+		"==": "Equal",
+		"!=": "NotEqual",
+		"<>": "NotEqual",
+		">=": "GreaterEqual",
+		"<=": "LessEqual",
+		">": "GreaterThan",
+		"<": "LessThan",
+	}
+
+	function associate(left, right) {
+        while(right.length > 0) {
+			let top = right.shift();
+			top.left = left;
+			left = top;
+		}
+		return left;
+	}
+}
+
 Body
 	= body:Statement* _
 		{ return { type: "ProgramBody", body } }
@@ -7,7 +33,12 @@ Statement
 	/ LineBreak
 
 Expression
-	= ConditionalExpression
+	= ConcatinationExpression
+
+ConcatinationExpression
+	= left:ConditionalExpression _ ".." right:ConcatinationExpression
+		{ return { type: "BinaryOperation", operation: "Concat", location: location(), left, right } }
+	/ ConditionalExpression
 
 ConditionalExpression
 	= test:BitwiseExpression _ "?" onTrue:ConditionalExpression _ ":" onFalse:ConditionalExpression
@@ -15,53 +46,24 @@ ConditionalExpression
 	/ BitwiseExpression
 
 BitwiseExpression
-	= left:ComparisonExpression _ "&" right:BitwiseExpression
-		{ return { type: "BinaryOperation", operation: "And", location: location(), left, right } }
-	/ left:ComparisonExpression _ "|" right:BitwiseExpression
-		{ return { type: "BinaryOperation", operation: "Or", location: location(), left, right } }
-	/ left:ComparisonExpression _ "^" right:BitwiseExpression
-		{ return { type: "BinaryOperation", operation: "ExclusiveOr", location: location(), left, right } }
-	/ ComparisonExpression
+	= left:ComparisonExpression _ right:(_ op:("&"/"|"/"^") right:ComparisonExpression { return { type:"BinaryOperation", operation: OPERATORS[op], location: location(), right } })*
+		{ return associate(left, right) }
 
 ComparisonExpression
-	= left:ShiftExpression _ "=" "="? right:ComparisonExpression
-		{ return { type: "BinaryOperation", operation: "Equal", location: location(), left, right } }
-	/ left:ShiftExpression _ "!=" "<>"? right:ComparisonExpression
-		{ return { type: "BinaryOperation", operation: "NotEqual", location: location(), left, right } }
-	/ left:ShiftExpression _ "<=" right:ComparisonExpression
-		{ return { type: "BinaryOperation", operation: "LessEqual", location: location(), left, right } }
-	/ left:ShiftExpression _ ">=" right:ComparisonExpression
-		{ return { type: "BinaryOperation", operation: "GreaterEqual", location: location(), left, right } }
-	/ left:ShiftExpression _ "<" right:ComparisonExpression
-		{ return { type: "BinaryOperation", operation: "Less", location: location(), left, right } }
-	/ left:ShiftExpression _ ">" right:ComparisonExpression
-		{ return { type: "BinaryOperation", operation: "Greater", location: location(), left, right } }
-	/ ShiftExpression
+	= left:ShiftExpression _ right:(_ op:("=="/"="/"!="/"<>"/">="/"<="/">"/"<") right:ShiftExpression { return { type:"BinaryOperation", operation: OPERATORS[op], location: location(), right } })*
+		{ return associate(left, right) }
 
 ShiftExpression
-	= left:AdditionExpression _ ">>>" right:ShiftExpression
-		{ return { type: "BinaryOperation", operation: "ArithmaticShiftRight", location: location(), left, right } }
-	/ left:AdditionExpression _ ">>" right:ShiftExpression
-		{ return { type: "BinaryOperation", operation: "ShiftRight", location: location(), left, right } }
-	/ left:AdditionExpression _ "<<" right:ShiftExpression
-		{ return { type: "BinaryOperation", operation: "ShiftLeft", location: location(), left, right } }
-	/ AdditionExpression
+	= left:AdditionExpression _ right:(_ op:(">>>"/">>"/"<<") right:AdditionExpression { return { type:"BinaryOperation", operation: OPERATORS[op], location: location(), right } })*
+		{ return associate(left, right) }
 
 AdditionExpression
-	= left:MultiplicationExpression _ "+" right:AdditionExpression
-		{ return { type: "BinaryOperation", operation: "Add", location: location(), left, right } }
-	/ left:MultiplicationExpression _ "-" right:AdditionExpression
-		{ return { type: "BinaryOperation", operation: "Subtract", location: location(), left, right } }
-	/ MultiplicationExpression
+	= left:MultiplicationExpression _ right:(_ op:("+"/"-") right:MultiplicationExpression { return { type:"BinaryOperation", operation: OPERATORS[op], location: location(), right } })*
+		{ return associate(left, right) }
 
 MultiplicationExpression
-	= left:PowerExpression _ "*" right:MultiplicationExpression
-		{ return { type: "BinaryOperation", operation: "Multiply", location: location(), left, right } }
-	/ left:PowerExpression _ "/" right:MultiplicationExpression
-		{ return { type: "BinaryOperation", operation: "Divide", location: location(), left, right } }
-	/ left:PowerExpression _ "%" right:MultiplicationExpression
-		{ return { type: "BinaryOperation", operation: "Modulo", location: location(), left, right } }
-	/ PowerExpression
+	= left:PowerExpression _ right:(_ op:("*" !"*"/"/"/"%") right:PowerExpression { return { type:"BinaryOperation", operation: OPERATORS[op], location: location(), right } })*
+		{ return associate(left, right) }
 
 PowerExpression
 	= left:UnaryExpression _ "**" right:PowerExpression
@@ -90,7 +92,7 @@ Number
 		{ return { type: "Number", value: parseInt(value, 10), location: location() } }
 
 Identifier
-	= _ !ReservedWord name:$([A-Z_]i [A-Z0-9_]i+)
+	= _ !ReservedWord name:$("$"? [A-Z_]i [A-Z0-9_]i+)
 		{ return { type: "Identifier", location: location(), name } }
 
 ReservedWord
