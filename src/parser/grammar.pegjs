@@ -14,10 +14,10 @@
 		"<": "LessThan",
 	}
 
-	function associate(left, right) {
+	function associate(term, left, right) {
         while(right.length > 0) {
 			let top = right.shift();
-			top.left = left;
+			top[term] = left;
 			left = top;
 		}
 		return left;
@@ -47,23 +47,23 @@ ConditionalExpression
 
 BitwiseExpression
 	= left:ComparisonExpression _ right:(_ op:("&"/"|"/"^") right:ComparisonExpression { return { type:"BinaryOperation", operation: OPERATORS[op], location: location(), right } })*
-		{ return associate(left, right) }
+		{ return associate("left", left, right) }
 
 ComparisonExpression
 	= left:ShiftExpression _ right:(_ op:("=="/"="/"!="/"<>"/">="/"<="/">"/"<") right:ShiftExpression { return { type:"BinaryOperation", operation: OPERATORS[op], location: location(), right } })*
-		{ return associate(left, right) }
+		{ return associate("left", left, right) }
 
 ShiftExpression
 	= left:AdditionExpression _ right:(_ op:(">>>"/">>"/"<<") right:AdditionExpression { return { type:"BinaryOperation", operation: OPERATORS[op], location: location(), right } })*
-		{ return associate(left, right) }
+		{ return associate("left", left, right) }
 
 AdditionExpression
 	= left:MultiplicationExpression _ right:(_ op:("+"/"-") right:MultiplicationExpression { return { type:"BinaryOperation", operation: OPERATORS[op], location: location(), right } })*
-		{ return associate(left, right) }
+		{ return associate("left", left, right) }
 
 MultiplicationExpression
 	= left:PowerExpression _ right:(_ op:("*" !"*"/"/"/"%") right:PowerExpression { return { type:"BinaryOperation", operation: OPERATORS[op], location: location(), right } })*
-		{ return associate(left, right) }
+		{ return associate("left", left, right) }
 
 PowerExpression
 	= left:UnaryExpression _ "**" right:PowerExpression
@@ -80,8 +80,22 @@ UnaryExpression
 TopExpression
 	= _ "(" e:Expression _ ")"
 		{ return e }
-	/ Identifier
+	/ identifier:Identifier ops:VariableOperation*
+		{ return associate("value", identifier, ops) }
 	/ Number
+	/ String
+
+VariableOperation
+	= _ "[" index:Expression _ "]"
+		{ return { type: "Index", location: location(), index } }
+	/ _ "." name:Identifier
+		{ return { type: "Property", location: location(), name } }
+	/ _ "(" args:(value:Expression _ "," { return value })* last:Expression? _ ")"
+		{ return { type: "FunctionCall", location: location(), args: last && args.concat(last) } }
+
+String
+	= _ '"' value:$(!'"' .)* '"'
+		{ return { type: "String", location: location(), value }}
 
 Number
 	= _ "0x"i value:$([A-F0-9]i+)
@@ -92,7 +106,7 @@ Number
 		{ return { type: "Number", value: parseInt(value, 10), location: location() } }
 
 Identifier
-	= _ !ReservedWord name:$("$"? [A-Z_]i [A-Z0-9_]i+)
+	= _ !ReservedWord name:$("$"? [A-Z_]i [A-Z0-9_]i*)
 		{ return { type: "Identifier", location: location(), name } }
 
 ReservedWord
