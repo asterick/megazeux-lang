@@ -32,12 +32,13 @@
 }
 
 Body
-	= body:Statement* _
+	= _ body:Statement*
 		{ return { type: "ProgramBody", body } }
 
 Statement
 	= UsingStatement
 	/ FunctionStatement
+	/ IfStatement
 	/ SwitchStatement
 	/ GlobalStatement
 	/ LocalStatement
@@ -48,36 +49,54 @@ Statement
 	/ LineBreak
 
 UsingStatement
-	= _ "IMPORT"i file:String name:(_ "AS"i name:Identifier { return name })?
+	= "IMPORT"i WB file:String name:("AS"i WB name:Identifier { return name })?
 		{ return { type: "ImportModule", file, name } }
 
 FunctionStatement
-	= _ "DEFINE"i name:Identifier _"(" first:(p:Identifier _ "," { return p })* last:Identifier? _ ")"
+	= "DEFINE"i WB name:Identifier "(" _ first:(p:Identifier "," _ { return p })* last:Identifier? ")" _
 		body: Statement*
-	  _ "END"i
+	  "ENDDEF"i WB
 		{ return { type: "FunctionStatement", name, parameters:last && first.concat(last), location: location(), body } }
 
+IfStatement
+	= "IF"i WB expression:Expression "THEN"i WB 
+		body:Statement*
+ 		elseifs:ElseIfStatement*
+ 		otherwise:ElseStatement?
+	  "ENDIF"i WB 
+		{ return { type: "IfStatement", location: location(), expression, body, elseifs, otherwise } }
+
+ElseIfStatement
+	= "ELSE"i WB "IF"i WB expression:Expression "THEN"i WB
+		body: Statement*
+		{ return { type: "ElseIfStatement", location: location(), body, expression } }
+
+ElseStatement
+	= "ELSE"i WB
+		body: Statement*
+		{ return { type: "ElseStatement", location: location(), body } }
+
 SwitchStatement
-	= _ "SWITCH"i match:Expression cases:SwitchCaseStatement* _ "END"i
+	= "SWITCH"i WB match:Expression cases:SwitchCaseStatement* "ENDSWITCH"i WB
 		{ return { type: "SwitchStatement", location: location(), match, cases }}
 
 SwitchCaseStatement
-	= match:(term:(Number/String) _ "," { return term })* last:(Number/String) _ ":" body:Statement*
+	= match:(term:(Number/String) "," _ { return term })* last:(Number/String) ":" _ body:Statement*
 		{ return { type: "SwitchCondition", match: match.concat(last), location: location(), body }}
-	/ _ "DEFAULT"i _ ":" body:Statement*
+	/ "DEFAULT"i WB ":" _ body:Statement*
 		{ return { type:"SwitchDefault", location: location(), body }}
 	/ LineBreak
 
 GlobalStatement
-	= _ "GLOBAL"i name:Identifier initializer:(_ "=" value:Expression { return value })?
+	= "GLOBAL"i WB name:Identifier initializer:("=" _ value:Expression { return value })?
 		{ return { type: "GlobalStatement", name, initializer } }
 
 LocalStatement
-	= _ "LOCAL"i name:Identifier initializer:(_ "=" value:Expression { return value })?
+	= "LOCAL"i WB name:Identifier initializer:("=" _ value:Expression { return value })?
 		{ return { type: "LocalStatement", name, initializer } }
 
 AssignmentStatement
-	= target:Variable _ op:("+"/"-"/"*"/"/"/"%"/"&"/"|"/"^") "=" right:Expression
+	= target:Variable op:("+"/"-"/"*"/"/"/"%"/"&"/"|"/"^") "=" _ right:Expression
 		{ 
 			return { 
 				type:"Assignment", 
@@ -92,64 +111,64 @@ AssignmentStatement
 				target
 			}
 		}
-	/ target:Variable _ "=" value:Expression
+	/ target:Variable "=" _ value:Expression
 		{ return { type:"AssignmentStatement", location: location(), target, value } }
 
 ReturnStatement
-	= _ "RETURN"i value:Expression
+	= "RETURN"i WB value:Expression
 		{ return { type:"ReturnStatement", location: location(), value } }
 
 Expression
 	= ConcatinationExpression
 
 ConcatinationExpression
-	= left:ConditionalExpression _ ".." right:ConcatinationExpression
+	= left:ConditionalExpression ".." _ right:ConcatinationExpression
 		{ return { type: "BinaryOperation", operation: "Concat", location: location(), left, right } }
 	/ ConditionalExpression
 
 ConditionalExpression
-	= test:BitwiseExpression _ "?" onTrue:ConditionalExpression _ ":" onFalse:ConditionalExpression
+	= test:BitwiseExpression "?" _ onTrue:ConditionalExpression _ ":" onFalse:ConditionalExpression
 		{ return { type: "ConditionalOperation", location: location(), test, onTrue, onFalse } }
 	/ BitwiseExpression
 
 BitwiseExpression
-	= left:ComparisonExpression _ right:(_ op:("&"/"|"/"^") right:ComparisonExpression { return { type:"BinaryOperation", operation: OPERATORS[op], location: location(), right } })*
+	= left:ComparisonExpression right:(op:("&"/"|"/"^") _ right:ComparisonExpression { return { type:"BinaryOperation", operation: OPERATORS[op], location: location(), right } })*
 		{ return associate("left", left, right) }
 
 ComparisonExpression
-	= left:ShiftExpression _ right:(_ op:("=="/"="/"!="/"<>"/">="/"<="/">"/"<") right:ShiftExpression { return { type:"BinaryOperation", operation: OPERATORS[op], location: location(), right } })*
+	= left:ShiftExpression right:(op:("=="/"="/"!="/"<>"/">="/"<="/">"/"<") _ right:ShiftExpression { return { type:"BinaryOperation", operation: OPERATORS[op], location: location(), right } })*
 		{ return associate("left", left, right) }
 
 ShiftExpression
-	= left:AdditionExpression _ right:(_ op:(">>>"/">>"/"<<") right:AdditionExpression { return { type:"BinaryOperation", operation: OPERATORS[op], location: location(), right } })*
+	= left:AdditionExpression right:(op:(">>>"/">>"/"<<") _ right:AdditionExpression { return { type:"BinaryOperation", operation: OPERATORS[op], location: location(), right } })*
 		{ return associate("left", left, right) }
 
 AdditionExpression
-	= left:MultiplicationExpression _ right:(_ op:("+"/"-") right:MultiplicationExpression { return { type:"BinaryOperation", operation: OPERATORS[op], location: location(), right } })*
+	= left:MultiplicationExpression right:(op:("+"/"-") _ right:MultiplicationExpression { return { type:"BinaryOperation", operation: OPERATORS[op], location: location(), right } })*
 		{ return associate("left", left, right) }
 
 MultiplicationExpression
-	= left:PowerExpression _ right:(_ op:("*" !"*"/"/"/"%") right:PowerExpression { return { type:"BinaryOperation", operation: OPERATORS[op], location: location(), right } })*
+	= left:PowerExpression right:(op:("*" !"*"/"/"/"%") _ right:PowerExpression { return { type:"BinaryOperation", operation: OPERATORS[op], location: location(), right } })*
 		{ return associate("left", left, right) }
 
 PowerExpression
-	= left:UnaryExpression _ "**" right:PowerExpression
+	= left:UnaryExpression "**" _ right:PowerExpression
 		{ return { type: "BinaryOperation", operation: "Power", location: location(), left, right } }
 	/ UnaryExpression
 
 UnaryExpression
-	= _ "-" value:UnaryExpression
+	= "-" _ value:UnaryExpression
 		{ return { type: "UnaryOperation", operation: "Negation", location: location(), value } }
-	/ _ "~" value:UnaryExpression
+	/ "~" _ value:UnaryExpression
 		{ return { type: "UnaryOperation", operation: "Complement", location: location(), value } }
-	/ _ "&" value:UnaryExpression
+	/ "&" _ value:UnaryExpression
 		{ return { type: "UnaryOperation", operation: "Reference", location: location(), value } }
-	/ _ "*" value:UnaryExpression
+	/ "*" _ value:UnaryExpression
 		{ return { type: "UnaryOperation", operation: "Dereference", location: location(), value } }
 	/ TopExpression
 
 TopExpression
-	= _ "(" e:Expression _ ")"
+	= "(" _ e:Expression ")" _
 		{ return e }
 	/ String
 	/ Number
@@ -160,34 +179,34 @@ Variable
 		{ return associate("value", identifier, ops) }
 
 VariableOperation
-	= _ "[" index:Expression _ "]"
+	= "[" _ index:Expression "]" _
 		{ return { type: "Index", location: location(), index } }
-	/ _ "." name:Identifier
+	/ "." _ name:Identifier
 		{ return { type: "Property", location: location(), name } }
-	/ _ "(" args:(value:Expression _ "," { return value })* last:Expression? _ ")"
+	/ "(" _ args:(value:Expression "," _ { return value })* last:Expression? ")" _
 		{ return { type: "FunctionCall", location: location(), args: last && args.concat(last) } }
 
 String
-	= _ '"' value:$(!'"' .)* '"'
+	= '"' value:$(!'"' .)* '"' _
 		{ return { type: "String", location: location(), value }}
 
 Number
-	= _ "0x"i value:$([A-F0-9]i+)
+	= "0x"i value:$([A-F0-9]i+) _
 		{ return { type: "Number", value: parseInt(value, 16), location: location() } }
-	/ _ "0b"i value:$([01]+)
+	/ "0b"i value:$([01]+) _
 		{ return { type: "Number", value: parseInt(value, 2), location: location() } }
-	/ _ value:$[0-9]+
+	/ value:$[0-9]+ _
 		{ return { type: "Number", value: parseInt(value, 10), location: location() } }
 
 Identifier
-	= _ !ZeuxTerm !ReservedWord name:$("$"? [A-Z_]i [A-Z0-9_]i*)
+	= !ZeuxTerm !ReservedWord name:$("$"? [A-Z_]i [A-Z0-9_]i*) _
 		{ return { type: "Identifier", location: location(), name } }
 
 ReservedWord
-	= _ name:ReservedWords ![A-Z]i
+	= name:ReservedWords ![A-Z]i
 
 ZeuxTerm
-	= _ name:ZeuxTerms ![A-Z]i
+	= name:ZeuxTerms ![A-Z]i _
 		{ return { type: "ZeuxTerm", location: location(), name } }
 
 ReservedWords
@@ -195,18 +214,182 @@ ReservedWords
 	/ "global"i
 	/ "local"i
 	/ "define"i
-	/ "end"i
 	/ "default"i
 	/ "switch"i
+	/ "if"i
+	/ "then"i
+	/ "else"i
+	/ "endif"i
+	/ "endswitch"i
+	/ "enddef"i
 
 ZeuxTerms
-	= "c"i [0-9?][0-9?]
-	/ "p"i [0-9?][0-9?]
-	/ "lockplayer"i
+	= "C"i [0-9?][0-9?]
+	/ "P"i [0-9?][0-9?]
+	/ "SHOOT"i
+	/ "ENABLE"i
+	/ "SPITFIRE"i
+	/ "SHOOTMISSILE"i
+	/ "MOVE"i
+	/ "DUPLICATE"i
+	/ "ORDER"i
+	/ "LAVAWALKER"i
+	/ "SLOWTIME"i
+	/ "LAST"i
+	/ "SAM"i
+	/ "FIREWALKER"i
+	/ "TAKEKEY"i
+	/ "FLIP"i
+	/ "FADE"i
+	/ "NONPUSHABLE"i
+	/ "GOTO"i
+	/ "RESTORE"i
+	/ "CLEAR"i
+	/ "RANDOM"i
+	/ "ALL"i
+	/ "SCROLLVIEW"i
+	/ "EXPLODE"i
+	/ "ARROW"i
+	/ "GO"i
+	/ "MISSILECOLOR"i
+	/ "VIEWPORT"i
+	/ "FIRST"i
+	/ "ON"i
+	/ "SFX"i
+	/ "EDIT"i
+	/ "DOUBLE"i
+	/ "SEND"i
+	/ "WRITE"i
+	/ "ITEM"i
+	/ "ATTACK"i
+	/ "ABORT"i
+	/ "COPYROBOT"i
+	/ "THIN"i
+	/ "LOCKPLAYER"i
+	/ "SAVE"i
+	/ "LOOP"i
+	/ "SAVING"i
+	/ "GOTOXY"i
+	/ "MAXHEALTH"i
+	/ "VOLUME"i
+	/ "STATIC"i
+	/ "BOARD"i
+	/ "BLOCK"i
+	/ "STRING"i
+	/ "BLIND"i
+	/ "NONE"i
+	/ "CENTER"i
+	/ "COLOR"i
+	/ "NEUTRAL"i
+	/ "AVALANCHE"i
+	/ "SCROLLBASE"i
+	/ "POSITION"i
+	/ "SCROLLPOINTER"i
+	/ "TRANSPARENT"i
+	/ "ROW"i
+	/ "LOAD"i
+	/ "ENEMY"i
+	/ "END"i
+	/ "TRY"i
+	/ "GIVEKEY"i
+	/ "INPUT"i
+	/ "EW"i
+	/ "FILLHEALTH"i
+	/ "SIZE"i
+	/ "TELEPORT"i
+	/ "START"i
+	/ "MATCHES"i
+	/ "LAYBOMB"i
+	/ "SCROLLTITLE"i
+	/ "ZAP"i
+	/ "NOT"i
+	/ "ANY"i
+	/ "WIND"i
+	/ "ENDLIFE"i
+	/ "CLIP"i
+	/ "GIVE"i
+	/ "HALF"i
+	/ "CHAR"i
+	/ "REL"i
+	/ "RESETVIEW"i
+	/ "OPEN"i
+	/ "SET"i
+	/ "SPRITE_COLLIDING"i
+	/ "NO"i
+	/ "COLUMN"i
+	/ "TRADE"i
+	/ "SWITCH"i
+	/ "DISABLE"i
+	/ "SWAP"i
+	/ "ASK"i
+	/ "WORLD"i
+	/ "ENDGAME"i
+	/ "NS"i
+	/ "OUT"i
+	/ "SCROLLCORNER"i
+	/ "PLAYERCOLOR"i
+	/ "EXCHANGE"i
+	/ "PERCENT"i
+	/ "JUMP"i
+	/ "PUSH"i
+	/ "IMAGE_FILE"i
+	/ "LOCKSELF"i
+	/ "PUSHABLE"i
+	/ "THICK"i
+	/ "WAIT"i
+	/ "BULLETE"i
+	/ "SHOOTSEEKER"i
+	/ "ALIGNEDROBOT"i
+	/ "BULLETN"i
+	/ "UNLOCKSCROLL"i
+	/ "PERSISTENT"i
+	/ "BULLETW"i
+	/ "INTENSITY"i
+	/ "BULLETS"i
+	/ "PUT"i
+	/ "LAZERWALL"i
+	/ "PALETTE"i
+	/ "SCROLLARROW"i
+	/ "UNLOCKPLAYER"i
+	/ "DIE"i
+	/ "COUNTER"i
+	/ "WALK"i
+	/ "ROTATECW"i
+	/ "CHANGE"i
+	/ "NONLAVAWALKER"i
+	/ "OVERLAY"i
+	/ "FREEZETIME"i
+	/ "UNLOCKSELF"i
+	/ "SENSORONLY"i
+	/ "BECOME"i
+	/ "CYCLE"i
+	/ "STATUS"i
+	/ "PLAY"i
+	/ "ROTATECCW"i
+	/ "SPRITE"i
+	/ "BULLETCOLOR"i
+	/ "PLAYER"i
+	/ "IN"i
+	/ "COPY"i
+	/ "MESG"i
+	/ "ID"i
+	/ "HIGH"i
+	/ "SELF"i
+	/ "EDGE"i
+	/ "TAKE"i
+	/ "LOCKSCROLL"i
+	/ "MESSAGE"i
+	/ "MOD"i
+	/ "SCROLL"i
+	/ "COUNTERS"i
 
 LineBreak
-	= _ ("\r\n" / "\n" / "\r")
+	= ("\r\n" / "\n" / "\r") _
 		{ return { type: "LineBreak", location: location() } }
+
+
+WB
+	= ![A-Z0-9_] _
 
 _
 	= [ \t]*

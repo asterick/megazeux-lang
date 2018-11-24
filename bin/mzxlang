@@ -33,6 +33,7 @@ parser.addArgument(
 parser.addArgument(
 	['-w', '--watch'],
 	{
+		action: 'storeTrue',
 		help: "rebuild source on file change"
 	}
 );
@@ -40,16 +41,12 @@ parser.addArgument(
 parser.addArgument(
 	['-o', '--target'],
 	{
-		help: "destination filename"
+		help: "destination filename",
+		defaultValue: 'output.txt'
 	}
 );
 
 const args = parser.parseArgs();
 
 // Temporary code
-try {
-	const program = tiko.compile(args.files);
-} catch(e) {
-	tiko.logging.log('error', e.message);
-}
-
+Compiler(args);
