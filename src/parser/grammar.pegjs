@@ -49,6 +49,13 @@ Statement
 	/ ZeuxTerm
 	/ Variable // For function calls
 	/ LineBreak
+	/ CommentStatement
+
+CommentStatement
+	= "//" body:(![\n\r] .)* LineBreak
+		{ return { type: "Comment", location: location(), body } }
+	/ "/*" body:(!"*/" .)* "*/"
+		{ return { type: "Comment", location: location(), body } }
 
 UsingStatement
 	= "IMPORT"i WB file:String name:("AS"i WB name:Identifier { return name })?
@@ -402,7 +409,6 @@ ZeuxTerms
 LineBreak
 	= ("\r\n" / "\n" / "\r") _
 		{ return { type: "LineBreak", location: location() } }
-
 
 WB
 	= ![A-Z0-9_] _

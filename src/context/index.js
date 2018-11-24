@@ -6,12 +6,13 @@ const logging = require('../logging');
 const locate = require('../locate');
 
 class Module {
-	constructor (fn) {
+	constructor (ctx, fn) {
 		this._path = fn;
 		this._defaultName = path.basename(fn).split(".")[0];
 
 		this._ast = parser.parse(fs.readFileSync(fn, 'utf-8'));
-		this._ = {};
+		this._context = ctx;
+		this._globals = {};
 
 		console.log(this._ast)
 	}
@@ -31,7 +32,7 @@ class Context {
 		logging.info(`Importing: ${fn} (${target})`)
 
 		this.files.push(target);
-		this._modules[target] = new Module(target);
+		this._modules[target] = new Module(this, target);
 	}
 
 	export(fn) {
